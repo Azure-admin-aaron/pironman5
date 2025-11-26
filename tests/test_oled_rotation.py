@@ -166,7 +166,7 @@ def demo_oled_rotation(rotation_angle):
             renderer.draw_text(f"{rotation_angle}°", center_x, 50, align='center')
             renderer.draw_text("Portrait", center_x, 75, align='center')
             renderer.draw_text("Mode", center_x, 95, align='center')
-            renderer.draw_bar_graph_vertical(75, 5, 100, y=20, width=8)
+            renderer.draw_bar_graph_vertical(percent=75, x=5, height=100, y=20, width=8)
         else:
             # Landscape mode: 128x64 canvas
             center_x = renderer.get_center_x()  # 64

@@ -20,7 +20,6 @@ Requirements:
 """
 
 from PIL import Image, ImageDraw, ImageFont
-import io
 
 
 # Standard OLED display dimensions
@@ -275,7 +274,7 @@ class OLEDPortraitRenderer:
             return self._image.rotate(-90, expand=True)
         elif self.rotation == 270:
             # Portrait mode: rotate 270° clockwise (or 90° counter-clockwise)
-            return self._image.rotate(-270, expand=True)
+            return self._image.rotate(90, expand=True)
         else:
             return self._image.copy()
     
@@ -390,6 +389,6 @@ def rotate_image_for_display(image, rotation):
         # For 90° display rotation, rotate canvas content
         return image.rotate(-90, expand=True)
     elif rotation == 270:
-        return image.rotate(-270, expand=True)
+        return image.rotate(90, expand=True)
     
     return image.copy()
