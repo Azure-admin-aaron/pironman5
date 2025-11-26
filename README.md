@@ -65,10 +65,10 @@ pironman5 -oe true   # Enable
 pironman5 -oe false  # Disable
 
 # Set OLED rotation (0°, 90°, 180°, or 270°)
-pironman5 -or 0      # Normal orientation
-pironman5 -or 90     # Rotate 90° clockwise
-pironman5 -or 180    # Rotate 180° (upside down)
-pironman5 -or 270    # Rotate 270° clockwise (or 90° counter-clockwise)
+pironman5 -or 0      # Normal orientation (landscape 128x64)
+pironman5 -or 90     # Rotate 90° clockwise (portrait 64x128)
+pironman5 -or 180    # Rotate 180° (upside down, landscape 128x64)
+pironman5 -or 270    # Rotate 270° clockwise (portrait 64x128)
 
 # Show current OLED rotation
 pironman5 -or
@@ -85,7 +85,18 @@ pironman5 -oi eth0   # Show specific interface
 pironman5 -os 10
 ```
 
-**Note:** OLED rotation options 90° and 270° require pm_auto version that supports these rotations. These rotations convert the display to portrait mode.
+#### OLED Rotation Modes
+
+The OLED display supports four rotation modes:
+
+| Rotation | Mode | Canvas Size | Description |
+|----------|------|-------------|-------------|
+| 0° | Landscape | 128×64 | Default orientation |
+| 90° | Portrait | 64×128 | Rotated 90° clockwise |
+| 180° | Landscape | 128×64 | Upside down |
+| 270° | Portrait | 64×128 | Rotated 270° clockwise |
+
+**Portrait Mode (90° and 270°):** When using portrait mode, the display canvas is 64×128 pixels (narrow and tall). The `pironman5.oled_portrait` module handles the canvas creation and image rotation automatically. Content is drawn on the portrait canvas and then rotated before being sent to the hardware.
 
 ### RGB LED Options
 
