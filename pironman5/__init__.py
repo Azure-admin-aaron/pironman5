@@ -64,7 +64,7 @@ def main():
         parser.add_argument("-oe", "--oled-enable", nargs='?', default='', help="OLED enable True/true/on/On/1 or False/false/off/Off/0")
         parser.add_argument("-od", "--oled-disk", nargs='?', default='', help="Set to display which disk on OLED. 'total' or the name of the disk, like mmbclk or nvme")
         parser.add_argument("-oi", "--oled-network-interface", nargs='?', default='', help="Set to display which ip of network interface on OLED, 'all' or the interface name, like eth0 or wlan0")
-        parser.add_argument("-or", "--oled-rotation", nargs='?', default=-1, type=int, choices=[0, 180], help="Set to rotate OLED display, 0, 180")
+        parser.add_argument("-or", "--oled-rotation", nargs='?', default=-1, type=int, choices=[0, 90, 180, 270], help="Set to rotate OLED display, 0, 90, 180, 270")
     if is_included(PERIPHERALS, "vibration_switch"):
         parser.add_argument("-vp", "--vibration-switch-pin", nargs='?', default='', help="Vibration switch pin")
         parser.add_argument("-vu", "--vibration-switch-pull-up", nargs='?', default='', help="Vibration switch pull up True/False")
@@ -360,13 +360,13 @@ def main():
                 try:
                     args.oled_rotation = int(args.oled_rotation)
                 except ValueError:
-                    print(f"Invalid value for OLED rotation, it should be an integer of 0 or 180")
+                    print(f"Invalid value for OLED rotation, it should be an integer of 0, 90, 180, or 270")
                     quit()
-                if args.oled_rotation not in [0, 180]:
-                    print(f"Invalid value for OLED rotation, it should be 0 or 180")
+                if args.oled_rotation not in [0, 90, 180, 270]:
+                    print(f"Invalid value for OLED rotation, it should be 0, 90, 180, or 270")
                     quit()
                 new_sys_config['oled_rotation'] = args.oled_rotation
-                print(f"SetOLED rotation: {args.oled_rotation}")
+                print(f"Set OLED rotation: {args.oled_rotation}")
     # Vibration switch settings
     # ----------------------------------------
     if is_included(PERIPHERALS, "vibration_switch"):
