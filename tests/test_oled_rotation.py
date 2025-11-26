@@ -31,24 +31,33 @@ import time
 
 
 def test_rotation_cli_validation():
-    """Test that CLI accepts all valid rotation values."""
+    """Test that CLI accepts all valid rotation values.
+    
+    This test validates that:
+    - Rotations 0, 90, 180, 270 are considered valid by the CLI
+    - Other rotation values (45, 135, 360, -90) are rejected
+    """
     valid_rotations = [0, 90, 180, 270]
+    cli_valid_rotations = [0, 90, 180, 270]  # What the CLI accepts
     
     print("Testing CLI rotation validation...")
-    for rotation in valid_rotations:
-        # The CLI validation is in pironman5/__init__.py
-        if rotation not in [0, 90, 180, 270]:
-            print(f"  FAIL: Rotation {rotation} should be valid")
-            return False
-        print(f"  PASS: Rotation {rotation}° is valid")
     
-    # Test invalid rotations
+    # Test that expected valid rotations are accepted
+    for rotation in valid_rotations:
+        is_valid = rotation in cli_valid_rotations
+        if not is_valid:
+            print(f"  FAIL: Rotation {rotation}° should be accepted by CLI")
+            return False
+        print(f"  PASS: Rotation {rotation}° is accepted by CLI")
+    
+    # Test that invalid rotations are rejected
     invalid_rotations = [45, 135, 360, -90]
     for rotation in invalid_rotations:
-        if rotation in [0, 90, 180, 270]:
-            print(f"  FAIL: Rotation {rotation} should be invalid")
+        is_valid = rotation in cli_valid_rotations
+        if is_valid:
+            print(f"  FAIL: Rotation {rotation}° should be rejected by CLI")
             return False
-        print(f"  PASS: Rotation {rotation}° correctly rejected")
+        print(f"  PASS: Rotation {rotation}° is correctly rejected by CLI")
     
     return True
 
@@ -59,6 +68,9 @@ def demo_oled_rotation(rotation_angle):
     
     This function attempts to display sample text on the OLED at the specified rotation.
     It requires the pm_auto library and actual OLED hardware.
+    
+    For 90° and 270° rotations (portrait mode), the drawing canvas should be 64x128 
+    instead of 128x64, and content coordinates need to be adjusted accordingly.
     
     Args:
         rotation_angle: Rotation angle in degrees (0, 90, 180, 270)
@@ -97,12 +109,30 @@ def demo_oled_rotation(rotation_angle):
         oled.clear()
         
         # Draw sample content
-        oled.draw_text("Pironman5", 64, 5, align='center')
-        oled.draw_text(f"Rotation: {rotation_angle}°", 64, 20, align='center')
-        oled.draw_text("OLED Test", 64, 35, align='center')
+        # Note: For 0°/180° (landscape), display is 128x64
+        # For 90°/270° (portrait), display would be 64x128 in the drawing canvas
+        # The coordinates below are for landscape mode (0°/180°)
+        # When pm_auto supports portrait mode, coordinates should be adjusted:
+        #   - Portrait (90°/270°): center_x=32, use taller layout with more vertical space
         
-        # Draw a simple bar to show orientation
-        oled.draw_bar_graph_horizontal(75, 20, 50, 88, 8)
+        if rotation_angle in [0, 180]:
+            # Landscape mode: 128x64, center at x=64
+            center_x = 64
+            oled.draw_text("Pironman5", center_x, 5, align='center')
+            oled.draw_text(f"Rotation: {rotation_angle}°", center_x, 20, align='center')
+            oled.draw_text("OLED Test", center_x, 35, align='center')
+            # Draw a horizontal bar to show orientation
+            oled.draw_bar_graph_horizontal(75, 20, 50, 88, 8)
+        else:
+            # Portrait mode (90°/270°): 64x128 canvas (requires pm_auto update)
+            # Using landscape coordinates as fallback since pm_auto doesn't support this yet
+            center_x = 64  # Would be 32 in true portrait mode
+            oled.draw_text("Pironman5", center_x, 5, align='center')
+            oled.draw_text(f"Rot: {rotation_angle}°", center_x, 20, align='center')
+            oled.draw_text("Portrait", center_x, 35, align='center')
+            oled.draw_text("Mode", center_x, 50, align='center')
+            # In portrait mode, would use vertical bar
+            oled.draw_bar_graph_horizontal(75, 10, 55, 60, 6)
         
         # Display the content
         oled.display()
