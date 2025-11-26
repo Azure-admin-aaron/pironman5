@@ -43,7 +43,89 @@ sudo python3 install.py
 
 ## Usage
 
--
+### CLI Options
+
+The `pironman5` command provides various configuration options:
+
+```bash
+# Show help
+pironman5 --help
+
+# Show current configuration
+pironman5 --config
+```
+
+### OLED Display Options
+
+Configure the OLED display:
+
+```bash
+# Enable/disable OLED display
+pironman5 -oe true   # Enable
+pironman5 -oe false  # Disable
+
+# Set OLED rotation (0°, 90°, 180°, or 270°)
+pironman5 -or 0      # Normal orientation
+pironman5 -or 90     # Rotate 90° clockwise
+pironman5 -or 180    # Rotate 180° (upside down)
+pironman5 -or 270    # Rotate 270° clockwise (or 90° counter-clockwise)
+
+# Show current OLED rotation
+pironman5 -or
+
+# Set which disk to display
+pironman5 -od total  # Show total disk usage
+pironman5 -od nvme   # Show specific disk
+
+# Set which network interface IP to display
+pironman5 -oi all    # Cycle through all IPs
+pironman5 -oi eth0   # Show specific interface
+
+# Set OLED sleep timeout (seconds, 0 to disable)
+pironman5 -os 10
+```
+
+**Note:** OLED rotation options 90° and 270° require pm_auto version that supports these rotations. These rotations convert the display to portrait mode.
+
+### RGB LED Options
+
+```bash
+# Set RGB color (hex format without #)
+pironman5 -rc ff0000  # Red
+
+# Set RGB brightness (0-100)
+pironman5 -rb 50
+
+# Set RGB style
+pironman5 -rs breathing
+
+# Set RGB speed (0-100)
+pironman5 -rp 50
+
+# Enable/disable RGB
+pironman5 -re true
+```
+
+### Temperature Options
+
+```bash
+# Set temperature unit (C or F)
+pironman5 -u C  # Celsius
+pironman5 -u F  # Fahrenheit
+```
+
+### Service Commands
+
+```bash
+# Start the service in foreground
+pironman5 start
+
+# Stop the service
+pironman5 stop
+
+# Restart the service (use systemctl)
+sudo systemctl restart pironman5.service
+```
 
 ## Update
 
