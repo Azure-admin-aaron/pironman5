@@ -23,11 +23,20 @@ Example:
     
     # Run demo of all rotations
     python3 tests/test_oled_rotation.py --demo
+
+Portrait Mode Support:
+    For 90° and 270° rotations, the pironman5.oled_portrait module provides
+    proper portrait mode rendering with a 64x128 canvas. The image is then
+    rotated before being sent to the display.
 """
 
 import argparse
+import os
 import sys
 import time
+
+# Add the parent directory to the path so we can import the module
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_rotation_cli_validation():
@@ -62,6 +71,71 @@ def test_rotation_cli_validation():
     return True
 
 
+def test_portrait_mode_module():
+    """Test the portrait mode module functionality.
+    
+    This test validates that:
+    - The OLEDPortraitRenderer class can be imported
+    - Canvas dimensions are correct for each rotation
+    - Portrait mode is correctly detected
+    """
+    try:
+        from pironman5.oled_portrait import (
+            OLEDPortraitRenderer,
+            is_portrait_mode,
+            get_canvas_dimensions,
+        )
+    except ImportError as e:
+        print(f"  FAIL: Could not import oled_portrait module: {e}")
+        return False
+    
+    print("\nTesting portrait mode module...")
+    
+    # Test canvas dimensions
+    test_cases = [
+        (0, (128, 64), False),
+        (90, (64, 128), True),
+        (180, (128, 64), False),
+        (270, (64, 128), True),
+    ]
+    
+    for rotation, expected_dims, expected_portrait in test_cases:
+        # Test get_canvas_dimensions function
+        dims = get_canvas_dimensions(rotation)
+        if dims != expected_dims:
+            print(f"  FAIL: get_canvas_dimensions({rotation}) = {dims}, expected {expected_dims}")
+            return False
+        
+        # Test is_portrait_mode function
+        portrait = is_portrait_mode(rotation)
+        if portrait != expected_portrait:
+            print(f"  FAIL: is_portrait_mode({rotation}) = {portrait}, expected {expected_portrait}")
+            return False
+        
+        # Test OLEDPortraitRenderer class
+        renderer = OLEDPortraitRenderer(rotation=rotation)
+        if renderer.get_canvas_size() != expected_dims:
+            print(f"  FAIL: Renderer canvas size at {rotation}° = {renderer.get_canvas_size()}, expected {expected_dims}")
+            return False
+        if renderer.is_portrait != expected_portrait:
+            print(f"  FAIL: Renderer is_portrait at {rotation}° = {renderer.is_portrait}, expected {expected_portrait}")
+            return False
+        
+        print(f"  PASS: Rotation {rotation}° - canvas={dims}, portrait={portrait}")
+    
+    # Test that rotated image has correct final size (always 128x64 for display)
+    print("\nTesting rotated image sizes...")
+    for rotation in [0, 90, 180, 270]:
+        renderer = OLEDPortraitRenderer(rotation=rotation)
+        rotated = renderer.get_rotated_image()
+        if rotated.size != (128, 64):
+            print(f"  FAIL: Rotated image at {rotation}° has size {rotated.size}, expected (128, 64)")
+            return False
+        print(f"  PASS: Rotated image at {rotation}° has correct size (128, 64)")
+    
+    return True
+
+
 def demo_oled_rotation(rotation_angle):
     """
     Demonstrate OLED rotation with sample text.
@@ -69,22 +143,58 @@ def demo_oled_rotation(rotation_angle):
     This function attempts to display sample text on the OLED at the specified rotation.
     It requires the pm_auto library and actual OLED hardware.
     
-    For 90° and 270° rotations (portrait mode), the drawing canvas should be 64x128 
-    instead of 128x64, and content coordinates need to be adjusted accordingly.
+    For 90° and 270° rotations (portrait mode), the pironman5.oled_portrait module
+    is used to create the proper 64x128 canvas and handle rotation.
     
     Args:
         rotation_angle: Rotation angle in degrees (0, 90, 180, 270)
     """
+    # First, try to use the portrait mode module for demonstration
     try:
-        from pm_auto.ssd1306 import SSD1306, Rect
+        from pironman5.oled_portrait import OLEDPortraitRenderer
+        
+        print(f"\nDemonstrating portrait mode rendering at {rotation_angle}°...")
+        
+        renderer = OLEDPortraitRenderer(rotation=rotation_angle)
+        renderer.clear()
+        
+        if renderer.is_portrait:
+            # Portrait mode: 64x128 canvas
+            center_x = renderer.get_center_x()  # 32
+            renderer.draw_text("Pironman5", center_x, 10, align='center')
+            renderer.draw_text(f"Rotation:", center_x, 30, align='center')
+            renderer.draw_text(f"{rotation_angle}°", center_x, 50, align='center')
+            renderer.draw_text("Portrait", center_x, 75, align='center')
+            renderer.draw_text("Mode", center_x, 95, align='center')
+            renderer.draw_bar_graph_vertical(75, 5, 100, y=20, width=8)
+        else:
+            # Landscape mode: 128x64 canvas
+            center_x = renderer.get_center_x()  # 64
+            renderer.draw_text("Pironman5", center_x, 5, align='center')
+            renderer.draw_text(f"Rotation: {rotation_angle}°", center_x, 20, align='center')
+            renderer.draw_text("Landscape Mode", center_x, 40, align='center')
+            renderer.draw_bar_graph_horizontal(75, 52, 100)
+        
+        # Get the rotated image ready for display
+        display_image = renderer.get_rotated_image()
+        print(f"  Canvas size: {renderer.get_canvas_size()}")
+        print(f"  Display image size: {display_image.size}")
+        print(f"  Portrait mode: {renderer.is_portrait}")
+        
     except ImportError:
-        print("Error: pm_auto library not found.")
+        print("  Note: Could not import oled_portrait module")
+    
+    # Now try to use the actual OLED hardware via pm_auto
+    try:
+        from pm_auto.ssd1306 import SSD1306
+    except ImportError:
+        print("Note: pm_auto library not found.")
         print("Please install pm_auto or run this script on a Pironman5 with the software installed.")
-        print("\nNote: For 90° and 270° rotation support, pm_auto needs to be updated to handle")
+        print("\nFor 90° and 270° rotation support, pm_auto needs to be updated to handle")
         print("portrait mode drawing (64x128 canvas) before rotation.")
         return False
     
-    print(f"\nTesting OLED with rotation: {rotation_angle}°")
+    print(f"\nTesting OLED hardware with rotation: {rotation_angle}°")
     
     try:
         oled = SSD1306()
@@ -189,7 +299,7 @@ Examples:
 Note:
     OLED hardware tests require a Raspberry Pi with Pironman5 hardware
     and the pm_auto library installed. The 90° and 270° rotation options
-    require pm_auto to be updated to support portrait mode rendering.
+    use the pironman5.oled_portrait module for proper portrait mode rendering.
         """
     )
     parser.add_argument(
@@ -214,10 +324,15 @@ Note:
     print("=== Pironman5 OLED Rotation Test ===\n")
     
     # Always run CLI validation tests
-    validation_passed = test_rotation_cli_validation()
+    cli_validation_passed = test_rotation_cli_validation()
+    
+    # Run portrait mode module tests
+    portrait_module_passed = test_portrait_mode_module()
+    
+    all_passed = cli_validation_passed and portrait_module_passed
     
     if args.validate_only:
-        if validation_passed:
+        if all_passed:
             print("\nAll validation tests passed!")
             sys.exit(0)
         else:
